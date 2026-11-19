@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
@@ -55,28 +54,14 @@ const Navbar = () => {
           })}
         </nav>
 
-        {/* User chip */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="flex items-center gap-2.5 rounded-full border border-gray-200 bg-white py-1 pl-1 pr-4 transition-colors hover:bg-gray-50"
+        {/* Actions */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/signin"
+            className="rounded-full border border-gray-200 bg-white px-5 py-2 text-sm font-semibold text-gray-800 transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700"
           >
-            <Image
-              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces"
-              alt="Elena Vance"
-              width={34}
-              height={34}
-              className="h-8 w-8 rounded-full object-cover"
-            />
-            <span className="flex flex-col items-start leading-none">
-              <span className="text-[13px] font-semibold text-gray-900">
-                Elena Vance
-              </span>
-              <span className="mt-1 text-[10px] text-gray-500">
-                Vendor • Premium
-              </span>
-            </span>
-          </button>
+            Sign In
+          </Link>
 
           {/* Mobile menu toggle */}
           <button
