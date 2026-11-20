@@ -72,6 +72,7 @@ const SignupForm = () => {
         return setError(error.message ?? "Could not create your account.");
 
       toast.add({
+        type: "success",
         title: `Hello ${data.user?.name}, Account created`,
         description: "Your account has been created successfully.",
       });

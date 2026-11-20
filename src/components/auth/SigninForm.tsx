@@ -21,7 +21,7 @@ import { Spinner } from "@/components/ui/spinner";
 import GoogleButton from "./GoogleButton";
 import PasswordInput from "./PasswordInput";
 import { signIn } from "@/lib/auth-client";
-import { toast } from "../ui/toast";
+import {toast} from "../ui/toast"
 import { useRouter } from "next/navigation";
 
 const SigninForm = () => {
@@ -47,6 +47,7 @@ const SigninForm = () => {
       console.log({ data, error });
       if (data?.user) {
         toast.add({
+          type:"success",
           title: `Hello ${data.user?.name}, welcome back!`,
           description: "You have been signed in successfully.",
         });
