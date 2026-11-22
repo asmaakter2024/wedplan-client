@@ -25,4 +25,4 @@ export const auth = betterAuth({
     enabled: true,
   },
   socialProviders: {},
-});
+}); 
