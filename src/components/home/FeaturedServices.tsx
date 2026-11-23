@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { authClient } from "@/lib/auth-client";
 
 /* ------------------------------------------------------------------ */
 /* Types + demo data                                                   */
@@ -98,8 +100,27 @@ const DEMO_SERVICES: Service[] = [
 /* ------------------------------------------------------------------ */
 
 const FeaturedServices = () => {
+  const router = useRouter();
+  const { data: session, isPending } = authClient.useSession();
+
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+
+  /**
+   * "View Details" follows the same access rule as the Browse page:
+   * visitors must sign in first, everybody else goes to the details page.
+   */
+  const handleViewDetails = useCallback(
+    (serviceId: string) => {
+      if (isPending) return; // still checking the session — ignore the click
+      if (!session) {
+        router.push("/signin");
+        return;
+      }
+      router.push(`/services/${serviceId}`);
+    },
+    [isPending, session, router],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -252,13 +273,14 @@ const FeaturedServices = () => {
                         </span>
                       </div>
 
-                      <Link
-                        href={`/services/${service._id}`}
+                      <button
+                        type="button"
+                        onClick={() => handleViewDetails(service._id)}
                         className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#7a1f2b] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#661824]"
                       >
                         View Details
                         <ArrowRight className="h-4 w-4" />
-                      </Link>
+                      </button>
                     </div>
                   </article>
                 );

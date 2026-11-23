@@ -1,39 +1,33 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import { authClient } from "@/lib/auth-client";
+import { Spinner } from "@/components/ui/spinner";
+import type { Role } from "@/lib/dashboard";
+import VendorOverview from "@/components/dashboard/vendor/VendorOverview";
+import CustomerOverview from "@/components/dashboard/customer/CustomerOverview";
+import AdminOverview from "@/components/dashboard/admin/AdminOverview";
 
 /**
- * Placeholder overview page.
- * Statistics cards will be filled with real database data later.
+ * Role-aware overview:
+ *   customer -> booking totals
+ *   vendor    -> services, requests, plan
+ *   admin     -> platform totals
  */
 export default function DashboardOverviewPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-gray-900">
-          Dashboard Overview
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome back! Here is a snapshot of your account.
-        </p>
-      </div>
+  const { data: session, isPending } = authClient.useSession();
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {["Total Bookings", "Pending Requests", "Accepted Bookings"].map(
-          (label) => (
-            <Card key={label}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">
-                  {label}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <span className="font-display text-3xl font-bold text-gray-900">
-                  0
-                </span>
-              </CardContent>
-            </Card>
-          ),
-        )}
+  if (isPending) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Spinner className="size-5" />
+        Loading your dashboard...
       </div>
-    </div>
-  );
+    );
+  }
+
+  const role = (session?.user?.role as Role | undefined) ?? "customer";
+
+  if (role === "vendor") return <VendorOverview />;
+  if (role === "admin") return <AdminOverview />;
+  return <CustomerOverview />;
 }
