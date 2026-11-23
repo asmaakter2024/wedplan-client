@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Heart, UserRound } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Heart, Menu, UserRound, X } from "lucide-react";
+import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import {
@@ -16,19 +17,12 @@ import SignoutCompo from "./Signout";
 const navLinks = [
   { label: "Home", href: "/" },
   { label: "Browse Services", href: "/services" },
-  { label: "Vendor Hub", href: "/vendors" },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { data: session, isPending } = authClient.useSession();
-
-  async function handleSignOut() {
-    await authClient.signOut();
-    router.push("/signin");
-    router.refresh();
-  }
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-black/5 bg-white">
@@ -57,7 +51,33 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <div>
+        <div className="flex items-center gap-2">
+          <details className="relative md:hidden" open={mobileMenuOpen}>
+            <summary
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              onClick={(event) => {
+                event.preventDefault();
+                setMobileMenuOpen((open) => !open);
+              }}
+              className="flex size-10 cursor-pointer list-none items-center justify-center rounded-full border"
+            >
+              {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+            </summary>
+            {mobileMenuOpen && (
+              <nav className="absolute right-0 top-12 z-50 flex min-w-48 flex-col gap-1 rounded-xl border bg-white p-2 shadow-lg">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-rose-50"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </details>
           {isPending ? null : session ? (
             <DropdownMenu>
               <DropdownMenuTrigger>
@@ -73,7 +93,7 @@ export default function Navbar() {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem>
-                  <Link href="/profile">My Profile</Link>
+                  <Link href="/dashboard/profile">Profile Settings</Link>
                 </DropdownMenuItem>
 
                 <DropdownMenuItem>

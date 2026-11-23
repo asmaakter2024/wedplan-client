@@ -35,13 +35,15 @@ const FEATURES: { label: string; free: boolean | string; premium: boolean | stri
     { label: "Premium vendor badge", free: false, premium: true },
     { label: "Priority placement in search", free: false, premium: true },
     { label: "Profile & analytics dashboard", free: true, premium: true },
-    { label: "Dedicated support", free: false, premium: true },
   ];
 
 const SubscriptionPage = () => {
   const [plan, setPlan] = useState<Plan>("free");
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
+  const [subscriptionExpiresAt, setSubscriptionExpiresAt] = useState<string | null>(null);
 
   /* Current plan ----------------------------------------------------- */
 
@@ -50,11 +52,15 @@ const SubscriptionPage = () => {
 
     async function loadPlan() {
       try {
-        const data = await apiFetch<{ user: { subscription?: Plan } }>(
+        const data = await apiFetch<{ user: { subscription?: Plan; subscriptionCancelAtPeriodEnd?: boolean; subscriptionExpiresAt?: string } }>(
           "/api/profile",
           { auth: true },
         );
-        if (!cancelled) setPlan(data.user?.subscription ?? "free");
+        if (!cancelled) {
+          setPlan(data.user?.subscription ?? "free");
+          setCancelAtPeriodEnd(data.user?.subscriptionCancelAtPeriodEnd ?? false);
+          setSubscriptionExpiresAt(data.user?.subscriptionExpiresAt || null);
+        }
       } catch {
         // The page still renders with the free plan if the API is unreachable
       } finally {
@@ -66,6 +72,27 @@ const SubscriptionPage = () => {
     return () => {
       cancelled = true;
     };
+  }, []);
+
+  const handleCancel = useCallback(async () => {
+    setCancelling(true);
+    try {
+      const result = await apiFetch<{ message: string; subscriptionExpiresAt: string | null }>(
+        "/api/payments/cancel",
+        { method: "POST", body: {} },
+      );
+      setCancelAtPeriodEnd(true);
+      setSubscriptionExpiresAt(result.subscriptionExpiresAt);
+      toast.add({ type: "success", title: "Cancellation scheduled", description: result.message });
+    } catch (error) {
+      toast.add({
+        type: "error",
+        title: "Could not cancel Premium",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setCancelling(false);
+    }
   }, []);
 
   /* Start Stripe Checkout ------------------------------------------- */
@@ -184,7 +211,7 @@ const SubscriptionPage = () => {
 
             <p className="mt-4 font-display text-4xl font-bold">
               {formatMoney(PREMIUM_PRICE)}
-              <span className="text-base font-medium text-white/50"> / one-time</span>
+              <span className="text-base font-medium text-white/50"> / month</span>
             </p>
             <p className="mt-2 text-sm text-white/70">
               Unlimited services and a premium badge on every listing.
@@ -210,13 +237,20 @@ const SubscriptionPage = () => {
 
             <div className="mt-auto pt-6">
               {plan === "premium" ? (
-                <Button
-                  className="h-10 w-full bg-amber-400 text-[#1c0f12] hover:bg-amber-300"
-                  disabled
-                >
-                  <InfinityIcon />
-                  Unlimited services active
-                </Button>
+                <div className="space-y-2">
+                  <Button className="h-10 w-full bg-amber-400 text-[#1c0f12] hover:bg-amber-300" disabled>
+                    <InfinityIcon /> Unlimited services active
+                  </Button>
+                  {cancelAtPeriodEnd ? (
+                    <p className="text-center text-xs text-amber-200">
+                      Premium ends {subscriptionExpiresAt ? new Date(subscriptionExpiresAt).toLocaleDateString() : "at the end of this billing period"}.
+                    </p>
+                  ) : (
+                    <Button variant="outline" onClick={handleCancel} disabled={cancelling} className="h-9 w-full border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white">
+                      {cancelling ? "Scheduling cancellation…" : "Cancel Premium at period end"}
+                    </Button>
+                  )}
+                </div>
               ) : (
                 <Button
                   onClick={handleUpgrade}
@@ -246,7 +280,7 @@ const SubscriptionPage = () => {
         </div>
 
         <p className="text-center text-xs text-gray-400">
-          Payments are handled by Stripe in test mode. Your premium plan is
+          Payments are billed monthly through Stripe in test mode. Your premium plan is
           activated only after Stripe confirms the payment on our server.{" "}
           <Link href="/dashboard/services" className="text-[#7a1f2b] underline-offset-2 hover:underline">
             Back to my services

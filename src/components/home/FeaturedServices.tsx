@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, MapPin, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
+import { API_URL } from "@/lib/api";
 
 /* ------------------------------------------------------------------ */
 /* Types + demo data                                                   */
@@ -19,6 +20,9 @@ type Vendor = {
   name?: string;
   image?: string | null;
   businessName?: string | null;
+  subscription?: string;
+  subscriptionPlan?: string;
+  subscriptionExpiresAt?: string;
 };
 
 /** Shape of one service coming from GET /api/services/featured */
@@ -33,67 +37,6 @@ type Service = {
   vendorId?: Vendor;
 };
 
-/**
- * Temporary showcase data.
- * It is only used while the API server is not running — as soon as the
- * server responds with real services, these are replaced automatically.
- */
-const DEMO_SERVICES: Service[] = [
-  {
-    _id: "demo-1",
-    serviceName: "Bespoke Garden Arch & Candlelit Ceremony",
-    category: "Decoration & Florist",
-    description:
-      "Custom seasonal ceremony arch installation, bridal and bridesmaid bouquets, lush runner centerpiece styling and candlelit tablescapes for your venue.",
-    price: 3400,
-    location: "San Francisco, CA",
-    images: [
-      "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?w=900&q=80",
-    ],
-    vendorId: {
-      _id: "demo-vendor-1",
-      businessName: "Atelier Lumiere Weddings",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces",
-    },
-  },
-  {
-    _id: "demo-2",
-    serviceName: "Haute Bridal Couture & Custom Gown Experience",
-    category: "Wedding Fashion",
-    description:
-      "Private showroom appointment with European silk gowns, cathedral veils, bespoke tuxedo tailoring and three fittings with your personal stylist.",
-    price: 2900,
-    location: "Beverly Hills, CA",
-    images: [
-      "https://images.unsplash.com/photo-1594552072238-b8a33785b261?w=900&q=80",
-    ],
-    vendorId: {
-      _id: "demo-vendor-1",
-      businessName: "Atelier Lumiere Weddings",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces",
-    },
-  },
-  {
-    _id: "demo-3",
-    serviceName: "Super 8mm Documentary Wedding Film",
-    category: "Photography & Videography",
-    description:
-      "Nostalgic Super 8mm film blended with digital 4K audio capture for vows and toasts, producing an heirloom cinematic wedding documentary.",
-    price: 3100,
-    location: "Santa Barbara, CA",
-    images: [
-      "https://images.unsplash.com/photo-1460978812857-470ed1c77af0?w=900&q=80",
-    ],
-    vendorId: {
-      _id: "demo-vendor-1",
-      businessName: "Atelier Lumiere Weddings",
-      image:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=96&h=96&fit=crop&crop=faces",
-    },
-  },
-];
 
 /* ------------------------------------------------------------------ */
 /* Component                                                            */
@@ -105,6 +48,8 @@ const FeaturedServices = () => {
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   /**
    * "View Details" follows the same access rule as the Browse page:
@@ -127,22 +72,20 @@ const FeaturedServices = () => {
 
     async function loadFeatured() {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!baseUrl) throw new Error("API url not configured");
-
-        const res = await fetch(`${baseUrl}/api/services/featured`);
+        if (!API_URL) throw new Error("Service API URL is not configured.");
+        const res = await fetch(`${API_URL}/api/services/featured`);
         if (!res.ok) throw new Error("Request failed");
 
         const data = await res.json();
 
-        // Use the real services when the API returned some
-        if (!cancelled && Array.isArray(data.services) && data.services.length > 0) {
-          setServices(data.services);
+        if (!cancelled && Array.isArray(data.services)) {
+          setServices(data.services.slice(0, 6));
         }
-      } catch {
-        // API not running yet — fall back to the demo data so the
-        // section still renders. Remove this once the server is live.
-        if (!cancelled) setServices(DEMO_SERVICES);
+      } catch (requestError) {
+        if (!cancelled) {
+          setServices([]);
+          setError(requestError instanceof Error ? requestError.message : "Could not load services.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -152,7 +95,7 @@ const FeaturedServices = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
 
   return (
     <section className="bg-white py-16 md:py-20">
@@ -167,8 +110,7 @@ const FeaturedServices = () => {
               Featured Wedding Services
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-500 sm:text-base">
-              Explore approved, active wedding experiences hand-picked from our
-              top creative partners and Premium vendors.
+              Explore approved and active wedding experiences from WedPlan vendors.
             </p>
           </div>
 
@@ -223,7 +165,7 @@ const FeaturedServices = () => {
                       </span>
                       <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-amber-100/95 px-3 py-1.5 text-xs font-semibold text-amber-800 shadow-sm">
                         <Sparkles className="h-3 w-3" />
-                        Featured Partner
+                        {vendor?.subscriptionPlan === "premium" ? "Premium Priority" : "Approved Vendor"}
                       </span>
                       <span className="absolute bottom-3 right-3 rounded-full bg-[#1c0f12] px-3.5 py-1.5 text-sm font-semibold text-white">
                         ${service.price.toLocaleString()}
@@ -268,7 +210,9 @@ const FeaturedServices = () => {
                             {vendorName}
                           </span>
                           <span className="text-xs text-gray-400">
-                            Premium Vendor
+                            {vendor?.subscriptionPlan === "premium" || vendor?.subscription === "premium"
+                              ? "Premium Vendor"
+                              : "Wedding Service Provider"}
                           </span>
                         </span>
                       </div>
@@ -286,6 +230,22 @@ const FeaturedServices = () => {
                 );
               })}
         </div>
+        {!loading && services.length === 0 && (
+          <div className="mt-8 rounded-2xl border border-dashed border-gray-300 bg-[#faf8f6] px-6 py-8 text-center">
+            <p className="text-sm text-gray-600">
+              {error ? "Featured services are temporarily unavailable." : "New featured services are coming soon."}
+            </p>
+            {error && (
+              <button
+                type="button"
+                onClick={() => { setError(null); setLoading(true); setRefreshKey((key) => key + 1); }}
+                className="mt-3 text-sm font-semibold text-[#7a1f2b] underline underline-offset-4"
+              >
+                Try again
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

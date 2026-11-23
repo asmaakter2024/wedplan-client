@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowRight, Mail } from "lucide-react";
+import { AlertCircle, ArrowRight, Heart, Mail } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,16 +44,15 @@ const SigninForm = () => {
     try {
       const { data, error } = await signIn.email(payload);
       if (error) return setError(error.message ?? "Invalid email or password.");
-      console.log({ data, error });
       if (data?.user) {
         toast.add({
           type:"success",
           title: `Hello ${data.user?.name}, welcome back!`,
           description: "You have been signed in successfully.",
         });
-        router.push("/");
+        router.push("/dashboard");
+        router.refresh();
       }
-      console.log("Sign in submitted:", { ...payload, password: "[hidden]" });
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -63,13 +62,18 @@ const SigninForm = () => {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#15295e] sm:text-3xl">
-          Welcome back
-        </h1>
-        <p className="text-sm text-muted-foreground">
-         Sign in to your WedPlan account to discover wedding services and manage your bookings.
-        </p>
+      <div className="space-y-3 text-center">
+        <span className="mx-auto flex size-11 items-center justify-center rounded-xl bg-[#8e263a] text-white shadow-sm">
+          <Heart className="size-5 fill-current" />
+        </span>
+        <div className="space-y-1.5">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-[#241518] sm:text-[1.7rem]">
+            Welcome back
+          </h1>
+          <p className="text-sm text-[#777074]">
+            Sign in to continue planning with WedPlan.
+          </p>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -102,12 +106,6 @@ const SigninForm = () => {
           <Field>
             <div className="flex items-center justify-between">
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Link
-                href="/forgot-password"
-                className="text-sm font-medium text-[#15295e] underline-offset-4 hover:underline"
-              >
-                Forgot password?
-              </Link>
             </div>
             <PasswordInput
               id="password"
@@ -149,9 +147,12 @@ const SigninForm = () => {
             )}
           </Button>
 
-          <FieldSeparator>or</FieldSeparator>
-
-          <GoogleButton disabled={isLoading} />
+          {process.env.NEXT_PUBLIC_GOOGLE_AUTH_ENABLED === "true" && (
+            <>
+              <FieldSeparator>or</FieldSeparator>
+              <GoogleButton disabled={isLoading} />
+            </>
+          )}
         </FieldGroup>
       </form>
 

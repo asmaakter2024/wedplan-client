@@ -8,14 +8,18 @@
  */
 
 /** Base URL of the Express API (set in .env as NEXT_PUBLIC_API_URL). */
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+export const API_URL = (configuredApiUrl || (process.env.NODE_ENV === "development" ? "http://localhost:5000" : "")).replace(/\/+$/, "");
 
 /** Cached token so we don't request a new one on every API call. */
 let cachedToken: string | null = null;
+let cachedTokenExpiresAt = 0;
 
 /** Requests a fresh JWT from our own /api/auth/token route. */
 async function getToken(): Promise<string | null> {
-  if (cachedToken) return cachedToken;
+  if (cachedToken && Date.now() < cachedTokenExpiresAt) return cachedToken;
+  cachedToken = null;
+  cachedTokenExpiresAt = 0;
 
   try {
     const res = await fetch("/api/auth/token", { method: "GET" });
@@ -23,6 +27,7 @@ async function getToken(): Promise<string | null> {
 
     const data = await res.json();
     cachedToken = data.token ?? null;
+    if (cachedToken) cachedTokenExpiresAt = Date.now() + 50 * 60 * 1000;
     return cachedToken;
   } catch {
     return null;
@@ -32,6 +37,7 @@ async function getToken(): Promise<string | null> {
 /** Clears the cached token (called after sign out). */
 export function clearToken() {
   cachedToken = null;
+  cachedTokenExpiresAt = 0;
 }
 
 type ApiOptions = {
@@ -51,6 +57,10 @@ export async function apiFetch<T = unknown>(
   path: string,
   options: ApiOptions = {},
 ): Promise<T> {
+  if (!API_URL) {
+    throw new Error("The WedPlan API URL is not configured. Set NEXT_PUBLIC_API_URL in the deployment environment.");
+  }
+
   const { body, method, auth } = options;
   const needsAuth = auth ?? method !== undefined;
 
@@ -66,17 +76,28 @@ export async function apiFetch<T = unknown>(
   }
 
   try {
-    const res = await fetch(`${API_URL}${path}`, {
+    const url = `${API_URL}${path}`;
+    const init: RequestInit = {
       method: method ?? "GET",
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
+    };
+
+    let res = await fetch(url, init);
+    if (res.status === 401 && needsAuth) {
+      clearToken();
+      const refreshedToken = await getToken();
+      if (refreshedToken) {
+        init.headers = { ...headers, Authorization: `Bearer ${refreshedToken}` };
+        res = await fetch(url, init);
+      }
+    }
 
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
       // Token may have expired — drop it so the next call fetches a new one
-      if (res.status === 401) cachedToken = null;
+      if (res.status === 401) clearToken();
       throw new Error(data.message || `Request failed (${res.status}).`);
     }
 

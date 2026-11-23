@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import DashboardSidebar from "@/components/dashboard/shared/DashboardSidebar";
+import { clearToken } from "@/lib/api";
 
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -21,6 +22,8 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!isPending && !session) {
       router.replace("/signin");
+    } else if (!isPending && session?.user.registrationRolePending) {
+      router.replace("/signup/complete");
     }
   }, [isPending, session, router]);
 
@@ -36,6 +39,26 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Being redirected to the sign-in page
   if (!session) return null;
+
+  if (session.user.isBlocked) {
+    return (
+      <main className="flex min-h-svh items-center justify-center bg-[#f9f6f4] px-4">
+        <section className="max-w-md rounded-2xl border bg-white p-7 text-center shadow-sm">
+          <h1 className="font-display text-xl font-semibold text-[#241518]">Account access is blocked</h1>
+          <p className="mt-2 text-sm text-[#777074]">Contact WedPlan support if you believe this is a mistake.</p>
+          <button
+            type="button"
+            onClick={async () => {
+              try { await authClient.signOut(); } finally { clearToken(); router.replace("/signin"); }
+            }}
+            className="mt-5 rounded-lg bg-[#8e263a] px-4 py-2 text-sm font-semibold text-white"
+          >
+            Sign out
+          </button>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <TooltipProvider>

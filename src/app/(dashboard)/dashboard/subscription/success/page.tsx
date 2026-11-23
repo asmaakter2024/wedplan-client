@@ -115,10 +115,10 @@ const PaymentSuccessPage = () => {
           <Button
             render={<Link href="/dashboard/subscription" />}
             className="h-10 bg-[#7a1f2b] text-white hover:bg-[#661824]"
-          >
+           nativeButton={false}>
             Back to Subscription
           </Button>
-          <Button render={<Link href="/dashboard/services/new" />} variant="outline" className="h-10">
+          <Button render={<Link href="/dashboard/services/new" />} variant="outline" className="h-10" nativeButton={false}>
             Add a service
           </Button>
         </div>

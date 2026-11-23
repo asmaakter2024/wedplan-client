@@ -62,7 +62,7 @@ const AdminOverview = () => {
           <Button
             render={<Link href="/dashboard/manage-services" />}
             className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-          >
+           nativeButton={false}>
             <FileCheck />
             Review Services
           </Button>
@@ -130,10 +130,10 @@ const AdminOverview = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button render={<Link href="/dashboard/users" />} variant="outline">
+          <Button render={<Link href="/dashboard/users" />} variant="outline" nativeButton={false}>
             Manage Users
           </Button>
-          <Button render={<Link href="/dashboard/transactions" />} variant="outline">
+          <Button render={<Link href="/dashboard/transactions" />} variant="outline" nativeButton={false}>
             Transactions
           </Button>
           <a

@@ -24,6 +24,9 @@ export async function GET(request: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ message: "Not signed in." }, { status: 401 });
     }
+    if (session.user.registrationRolePending) {
+      return NextResponse.json({ message: "Finish setting up your account first." }, { status: 403 });
+    }
 
     const secret = process.env.JWT_SECRET;
     if (!secret) {
@@ -42,6 +45,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ token });
   } catch (error) {
+    // Next.js uses this request-time signal to stop prerendering this GET route.
+    // Let it reach the framework instead of reporting it as a token failure.
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      error.digest === "NEXT_PRERENDER_INTERRUPTED"
+    ) {
+      throw error;
+    }
     console.error("Token generation failed:", error);
     return NextResponse.json(
       { message: "Could not create a token." },

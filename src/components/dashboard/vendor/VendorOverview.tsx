@@ -64,7 +64,7 @@ const VendorOverview = () => {
           <Button
             render={<Link href="/dashboard/services/new" />}
             className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-          >
+           nativeButton={false}>
             <PlusCircle />
             Add Service
           </Button>
@@ -94,7 +94,7 @@ const VendorOverview = () => {
             render={<Link href="/dashboard/subscription" />}
             variant="outline"
             className="shrink-0 border-amber-300 bg-white text-amber-900 hover:bg-amber-100"
-          >
+           nativeButton={false}>
             Upgrade to Premium
           </Button>
         )}

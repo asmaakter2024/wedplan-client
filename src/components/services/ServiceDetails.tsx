@@ -20,7 +20,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { apiFetch, API_URL } from "@/lib/api";
 import type { Service } from "@/lib/services";
-import { DEMO_SERVICES } from "@/lib/demo-services";
 
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
@@ -61,6 +60,7 @@ const ServiceDetails = ({ id }: { id: string }) => {
       }
 
       try {
+        if (!API_URL) throw new Error("Service API URL is not configured.");
         const res = await fetch(`${API_URL}/api/services/${id}`);
         const data = await res.json().catch(() => ({}));
 
@@ -73,12 +73,7 @@ const ServiceDetails = ({ id }: { id: string }) => {
           setActiveImage(0);
         }
       } catch (err) {
-        // Offline fallback: look the id up in the demo data
-        const demo = DEMO_SERVICES.find((item) => item._id === id);
-        if (demo && !cancelled) {
-          setService(demo);
-          setActiveImage(0);
-        } else if (!cancelled) {
+        if (!cancelled) {
           setError(
             err instanceof Error ? err.message : "Service not found.",
           );

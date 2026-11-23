@@ -2,6 +2,8 @@
 
 import type { SVGProps } from "react";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
+import { toast } from "@/components/ui/toast";
 
 const GoogleIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -27,15 +29,28 @@ const GoogleIcon = (props: SVGProps<SVGSVGElement>) => (
 type GoogleButtonProps = {
   label?: string;
   disabled?: boolean;
+  flow?: "signin" | "signup";
 };
 
 const GoogleButton = ({
   label = "Continue with Google",
   disabled,
+  flow = "signin",
 }: GoogleButtonProps) => {
   const handleGoogleSignIn = async () => {
-    // TODO (Better Auth): await authClient.signIn.social({ provider: "google", callbackURL: "/" });
-    console.log("Google sign-in clicked");
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: flow === "signup" ? "/signup/complete" : "/dashboard",
+      });
+      if (error) throw new Error(error.message ?? "Please try again.");
+    } catch (error) {
+      toast.add({
+        type: "error",
+        title: "Google sign-in failed",
+        description: error instanceof Error ? error.message : "Please try again.",
+      });
+    }
   };
 
   return (

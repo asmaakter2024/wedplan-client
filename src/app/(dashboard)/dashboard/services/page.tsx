@@ -95,7 +95,8 @@ const MyServicesPage = () => {
   }, []);
 
   useEffect(() => {
-    loadServices();
+    const timer = window.setTimeout(() => void loadServices(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadServices]);
 
   /* Availability toggle ---------------------------------------------- */
@@ -206,8 +207,6 @@ const MyServicesPage = () => {
 
   /* Render ------------------------------------------------------------ */
 
-  const usedCount = services.filter((service) => service.status !== "rejected").length;
-
   return (
     <RoleGuard allow={["vendor"]}>
       <div className="space-y-6">
@@ -218,7 +217,7 @@ const MyServicesPage = () => {
             <Button
               render={<Link href="/dashboard/services/new" />}
               className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-            >
+             nativeButton={false}>
               <PlusCircle />
               Add Service
             </Button>
@@ -233,14 +232,14 @@ const MyServicesPage = () => {
             </span>{" "}
             — {plan === "premium"
               ? "unlimited services"
-              : `${usedCount} of ${freeLimit} services used`}
+              : `${services.filter((service) => service.status === "approved" && service.isActive !== false).length} of ${freeLimit} active services used`}
           </p>
           {plan === "free" && (
             <Button
               render={<Link href="/dashboard/subscription" />}
               variant="outline"
               size="sm"
-            >
+             nativeButton={false}>
               Upgrade to Premium
             </Button>
           )}
@@ -265,7 +264,7 @@ const MyServicesPage = () => {
               <Button
                 render={<Link href="/dashboard/services/new" />}
                 className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-              >
+               nativeButton={false}>
                 <PlusCircle />
                 Add your first service
               </Button>

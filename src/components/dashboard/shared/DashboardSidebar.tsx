@@ -19,6 +19,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { clearToken } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -153,12 +154,17 @@ const DashboardSidebar = () => {
 
   const user = session?.user;
   const role = getSessionRole(user as { role?: unknown } | null | undefined);
+  const isPremium = role === "vendor" && user?.subscriptionPlan === "premium";
   const navGroups = NAV_BY_ROLE[role];
 
   async function handleSignOut() {
-    await authClient.signOut();
-    router.push("/signin");
-    router.refresh();
+    try {
+      await authClient.signOut();
+    } finally {
+      clearToken();
+      router.push("/signin");
+      router.refresh();
+    }
   }
 
   return (
@@ -264,7 +270,7 @@ const DashboardSidebar = () => {
                       )}
                     >
                       {ROLE_LABEL[role]}
-                      {role === "vendor" ? " • Premium" : ""}
+                      {isPremium ? " • Premium" : ""}
                     </span>
                   </div>
                 </SidebarMenuButton>

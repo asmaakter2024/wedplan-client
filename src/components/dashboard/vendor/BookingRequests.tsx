@@ -58,7 +58,8 @@ const BookingRequests = () => {
   }, []);
 
   useEffect(() => {
-    loadRequests();
+    const timer = window.setTimeout(() => void loadRequests(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadRequests]);
 
   /* Accept / Reject -------------------------------------------------- */

@@ -60,14 +60,14 @@ const CustomerOverview = () => {
         description="Track every booking request you have sent to vendors."
         action={
           <>
-            <Button render={<Link href="/dashboard/bookings" />} variant="outline">
+            <Button render={<Link href="/dashboard/bookings" />} variant="outline" nativeButton={false}>
               <CalendarCheck />
               My Bookings
             </Button>
             <Button
               render={<Link href="/services" />}
               className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-            >
+             nativeButton={false}>
               <Search />
               Browse Services
             </Button>

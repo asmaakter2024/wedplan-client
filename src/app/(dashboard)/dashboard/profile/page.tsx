@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
 import { BadgeCheck, ImageUp, Loader2, Save, ShieldCheck } from "lucide-react";
 import { toast } from "@/components/ui/toast";
@@ -27,6 +27,8 @@ type Profile = {
   subscription?: "free" | "premium";
 };
 
+const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
+
 /** Reads a picture from the computer and returns it as a base64 string. */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -46,6 +48,22 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+
+  const handleImageSelection = (event: ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.currentTarget.files?.[0] ?? null;
+    if (!selectedFile) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(selectedFile.type)) {
+      toast.add({ type: "error", title: "Unsupported image", description: "Choose a JPG, PNG or WebP image." });
+      event.currentTarget.value = "";
+      return;
+    }
+    if (selectedFile.size > MAX_PROFILE_IMAGE_BYTES) {
+      toast.add({ type: "error", title: "Image is too large", description: "Choose an image smaller than 5 MB." });
+      event.currentTarget.value = "";
+      return;
+    }
+    setFile(selectedFile);
+  };
 
   /* Load ------------------------------------------------------------ */
 
@@ -226,10 +244,10 @@ const ProfilePage = () => {
                 {file ? file.name : "Choose an image"}
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp"
                   className="hidden"
                   disabled={saving || uploading}
-                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  onChange={handleImageSelection}
                 />
               </label>
             </div>
@@ -248,7 +266,7 @@ const ProfilePage = () => {
             type="url"
             value={profile.image ?? ""}
             onChange={(event) => setProfile({ ...profile, image: event.target.value })}
-            placeholder="https://example.com/photo.jpg"
+            placeholder="https://i.ibb.co/.../photo.jpg"
             className={inputClass}
             disabled={saving || uploading}
           />

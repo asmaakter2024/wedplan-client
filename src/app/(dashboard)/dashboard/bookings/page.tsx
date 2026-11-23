@@ -1,25 +1,9 @@
-"use client";
+import BookingsPageClient from "./BookingsPageClient";
 
-import { authClient } from "@/lib/auth-client";
-import type { Role } from "@/lib/dashboard";
-import RoleGuard from "@/components/dashboard/shared/RoleGuard";
-import BookingRequests from "@/components/dashboard/vendor/BookingRequests";
-import MyBookings from "@/components/dashboard/customer/MyBookings";
+// The dashboard route depends on the vendor/customer session in the browser.
+// It can show its own loading state, but it cannot provide a public instant shell.
+export const instant = false;
 
-/**
- * One URL for two dashboards:
- *   /dashboard/bookings  ->  vendor: booking requests (accept / reject)
- *                            customer: my bookings (view / cancel)
- */
-const BookingsPage = () => {
-  const { data: session } = authClient.useSession();
-  const role = (session?.user?.role as Role | undefined) ?? "customer";
-
-  return (
-    <RoleGuard allow={["customer", "vendor"]}>
-      {role === "vendor" ? <BookingRequests /> : <MyBookings />}
-    </RoleGuard>
-  );
-};
-
-export default BookingsPage;
+export default function BookingsPage() {
+  return <BookingsPageClient />;
+}

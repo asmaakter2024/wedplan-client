@@ -67,7 +67,6 @@ const ManageServicesPage = () => {
   /* Load ------------------------------------------------------------ */
 
   const loadServices = useCallback(async () => {
-    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
@@ -91,12 +90,19 @@ const ManageServicesPage = () => {
   }, [search, status]);
 
   useEffect(() => {
-    loadServices();
+    const timer = window.setTimeout(() => void loadServices(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadServices]);
 
   const handleSearch = (event: FormEvent) => {
     event.preventDefault();
+    setLoading(true);
     setSearch(searchInput.trim());
+  };
+
+  const handleStatusChange = (value: string | null) => {
+    setLoading(true);
+    setStatus(value ?? "all");
   };
 
   /* Approve / reject -------------------------------------------------- */
@@ -231,7 +237,7 @@ const ManageServicesPage = () => {
             </Button>
           </form>
 
-          <Select value={status} onValueChange={(value) => setStatus(value ?? "all")}>
+          <Select value={status} onValueChange={handleStatusChange}>
             <SelectTrigger className="h-9 w-44 justify-between rounded-lg border-gray-200">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>

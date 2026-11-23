@@ -27,11 +27,11 @@ const PaymentCancelPage = () => {
           <Button
             render={<Link href="/dashboard/subscription" />}
             className="h-10 bg-[#7a1f2b] text-white hover:bg-[#661824]"
-          >
+           nativeButton={false}>
             <ArrowLeft />
             Back to Subscription
           </Button>
-          <Button render={<Link href="/dashboard" />} variant="outline" className="h-10">
+          <Button render={<Link href="/dashboard" />} variant="outline" className="h-10" nativeButton={false}>
             Go to Overview
           </Button>
         </div>

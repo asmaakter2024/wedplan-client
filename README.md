@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WedPlan Client
 
-## Getting Started
+WedPlan is a wedding-services marketplace built with Next.js. Customers can find wedding vendors and request bookings; vendors can publish services and manage requests; admins review listings and payments.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Email/password sign-up and sign-in with Better Auth
+- Customer and vendor registration, with admin roles kept out of public sign-up
+- Browse, search, filter, and sort approved services
+- Role-based dashboards and booking management
+- Profile and image upload flows
+- Stripe Checkout subscriptions for vendor Premium upgrades ($49/month; activated by verified webhooks)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Next.js, React, TypeScript, Better Auth, MongoDB, Express API, Stripe Checkout, ImgBB, Tailwind CSS, and Shadcn UI components.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Run locally
 
-## Learn More
+1. Copy `.env.example` to `.env` and fill in the MongoDB URI and strong secrets.
+2. Start the Express API from the server repository with `npm run dev`.
+3. Install client packages with `npm install`.
+4. Start this project with `npm run dev`.
+5. Open `http://localhost:3000`.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Name | Purpose |
+| --- | --- |
+| `BETTER_AUTH_SECRET` | Signs Better Auth sessions; keep private. |
+| `BETTER_AUTH_URL` | Canonical app URL (local URL in development, Vercel URL in production). |
+| `DB_URI` | MongoDB connection URI used by Better Auth. |
+| `JWT_SECRET` | Shared secret for short-lived API JWTs; must match the backend. |
+| `NEXT_PUBLIC_API_URL` | Public URL of the deployed Express API; never use localhost in production. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional Google OAuth credentials. |
+| `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | Set to `true` only when Google OAuth is configured. |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Vercel
 
-## Deploy on Vercel
+Import the client repository as a Next.js project. Add the variables above in **Project Settings → Environment Variables**. Set `BETTER_AUTH_URL` to the production Vercel origin and `NEXT_PUBLIC_API_URL` to the separately deployed Express API. Add the same MongoDB URI to the backend host, plus backend `CLIENT_URL` and the matching `JWT_SECRET`. Redeploy after changing variables.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+For Google sign-in, register `https://<your-domain>/api/auth/callback/google` with Google and set the OAuth credentials in Vercel. Stripe secret and webhook keys belong only on the backend host.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Admin accounts are not created through public sign-up. Create a normal account, then assign `role: "admin"` to that account's Better Auth `user` document from a trusted MongoDB admin session. Do not put admin credentials or secrets in the repository.
+
+## Links
+
+- Live site: not deployed yet
+- Client repository: add repository URL
+- Server repository: add repository URL
+
+Replace the sample contact and social links in the footer and add the real live-site and repository URLs before submitting the project.

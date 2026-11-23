@@ -62,7 +62,8 @@ const MyBookings = () => {
   }, []);
 
   useEffect(() => {
-    loadBookings();
+    const timer = window.setTimeout(() => void loadBookings(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadBookings]);
 
   /* Cancel ----------------------------------------------------------- */
@@ -128,7 +129,7 @@ const MyBookings = () => {
             <Button
               render={<Link href="/services" />}
               className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-            >
+             nativeButton={false}>
               <Search />
               Browse Services
             </Button>
@@ -180,7 +181,7 @@ const MyBookings = () => {
             <Button
               render={<Link href="/services" />}
               className="bg-[#7a1f2b] text-white hover:bg-[#661824]"
-            >
+             nativeButton={false}>
               <Search />
               Browse Services
             </Button>

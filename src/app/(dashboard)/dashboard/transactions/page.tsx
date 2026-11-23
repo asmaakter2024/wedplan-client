@@ -38,7 +38,6 @@ const TransactionsPage = () => {
   const [status, setStatus] = useState("all");
 
   const loadTransactions = useCallback(async () => {
-    setLoading(true);
     try {
       const data = await apiFetch<{ transactions: Transaction[] }>(
         "/api/admin/transactions",
@@ -56,8 +55,14 @@ const TransactionsPage = () => {
     }
   }, []);
 
+  const refreshTransactions = () => {
+    setLoading(true);
+    void loadTransactions();
+  };
+
   useEffect(() => {
-    loadTransactions();
+    const timer = window.setTimeout(() => void loadTransactions(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadTransactions]);
 
   /* Filtering (client side — the list is small) ---------------------- */
@@ -97,7 +102,7 @@ const TransactionsPage = () => {
           title="Transactions"
           description="Every Stripe payment made by vendors for the Premium plan."
           action={
-            <Button variant="outline" onClick={loadTransactions} disabled={loading}>
+            <Button variant="outline" onClick={refreshTransactions} disabled={loading}>
               <RefreshCw className={loading ? "animate-spin" : undefined} />
               Refresh
             </Button>

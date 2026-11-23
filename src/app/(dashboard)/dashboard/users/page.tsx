@@ -40,7 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { apiFetch } from "@/lib/api";
-import { formatDate, formatDateTime, type AdminUser, type Role } from "@/lib/dashboard";
+import { formatDate, formatDateTime, type AdminUser } from "@/lib/dashboard";
 import PageHeader from "@/components/dashboard/shared/PageHeader";
 import StatusBadge from "@/components/dashboard/shared/StatusBadge";
 import EmptyState from "@/components/dashboard/shared/EmptyState";
@@ -69,7 +69,6 @@ const ManageUsersPage = () => {
   /* Load ------------------------------------------------------------ */
 
   const loadUsers = useCallback(async () => {
-    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
@@ -93,12 +92,19 @@ const ManageUsersPage = () => {
   }, [search, role]);
 
   useEffect(() => {
-    loadUsers();
+    const timer = window.setTimeout(() => void loadUsers(), 0);
+    return () => window.clearTimeout(timer);
   }, [loadUsers]);
 
   const handleSearch = (event: FormEvent) => {
     event.preventDefault();
+    setLoading(true);
     setSearch(searchInput.trim());
+  };
+
+  const handleRoleChange = (value: string | null) => {
+    setLoading(true);
+    setRole(value ?? "all");
   };
 
   /* Block / unblock -------------------------------------------------- */
@@ -181,7 +187,7 @@ const ManageUsersPage = () => {
             </Button>
           </form>
 
-          <Select value={role} onValueChange={(value) => setRole(value ?? "all")}>
+          <Select value={role} onValueChange={handleRoleChange}>
             <SelectTrigger className="h-9 w-44 justify-between rounded-lg border-gray-200">
               <SelectValue placeholder="Filter by role" />
             </SelectTrigger>

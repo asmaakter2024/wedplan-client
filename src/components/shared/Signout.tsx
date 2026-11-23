@@ -1,12 +1,19 @@
 "use client";
 import { signOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { clearToken } from "@/lib/api";
 
 const SignoutCompo = () => {
   const router = useRouter();
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/signin");
+    try {
+      await signOut();
+      clearToken();
+      router.push("/signin");
+      router.refresh();
+    } catch {
+      clearToken();
+    }
   };
   return (
     <button

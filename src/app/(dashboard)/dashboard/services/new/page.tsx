@@ -61,7 +61,7 @@ const AddServicePage = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const chosen = event.target.files?.[0] ?? null;
 
-    if (chosen && !chosen.type.startsWith("image/")) {
+    if (chosen && !["image/jpeg", "image/png", "image/webp"].includes(chosen.type)) {
       toast.add({
         type: "error",
         title: "Unsupported file",
@@ -173,7 +173,7 @@ const AddServicePage = () => {
           title="Add Service"
           description="Create a new wedding service. An admin reviews it before customers can see it."
           action={
-            <Button render={<Link href="/dashboard/services" />} variant="outline">
+            <Button render={<Link href="/dashboard/services" />} variant="outline" nativeButton={false}>
               <ArrowLeft />
               My Services
             </Button>
@@ -186,7 +186,7 @@ const AddServicePage = () => {
           <p>
             New services are saved with the status <b>pending</b>. Customers only
             see a service after it is approved and active. The free plan allows up
-            to 3 services — Premium has no limit.
+            to 3 active services — Premium has no limit.
           </p>
         </div>
 

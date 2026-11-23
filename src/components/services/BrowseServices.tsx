@@ -14,7 +14,6 @@ import ServiceCard from "./ServiceCard";
 import { authClient } from "@/lib/auth-client";
 import { API_URL } from "@/lib/api";
 import { CATEGORIES, type Service } from "@/lib/services";
-import { filterDemoServices } from "@/lib/demo-services";
 
 /* ------------------------------------------------------------------ */
 /* Sort options                                                        */
@@ -52,7 +51,7 @@ const BrowseServices = () => {
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   /* Fetch services whenever the applied filters change --------------- */
   useEffect(() => {
@@ -60,7 +59,9 @@ const BrowseServices = () => {
 
     async function loadServices() {
       setLoading(true);
+      setRequestError(null);
       try {
+        if (!API_URL) throw new Error("Service API URL is not configured.");
         const params = new URLSearchParams();
         if (applied.search) params.set("search", applied.search);
         if (category && category !== "all") params.set("category", category);
@@ -78,14 +79,11 @@ const BrowseServices = () => {
 
         if (!cancelled && Array.isArray(data.services)) {
           setServices(data.services);
-          setIsDemo(false);
         }
-      } catch {
-        // API not reachable — filter the demo data locally so the page
-        // still works. Remove this once the server is running.
+      } catch (error) {
         if (!cancelled) {
-          setServices(filterDemoServices({ ...applied, category }));
-          setIsDemo(true);
+          setServices([]);
+          setRequestError(error instanceof Error ? error.message : "Could not load services.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -270,7 +268,6 @@ const BrowseServices = () => {
           {loading
             ? "Loading approved wedding services..."
             : `Showing ${services.length} of ${services.length} approved wedding services`}
-          {isDemo && !loading && " (demo data — API server offline)"}
         </p>
 
         {/* Results */}
@@ -298,19 +295,26 @@ const BrowseServices = () => {
               <SearchX className="h-7 w-7 text-gray-400" />
             </span>
             <h2 className="mt-4 font-display text-xl font-bold text-gray-900">
-              No services found
+              {requestError ? "Services are temporarily unavailable" : "No services found"}
             </h2>
             <p className="mt-2 max-w-md text-sm leading-relaxed text-gray-500">
-              We couldn&apos;t find any approved services matching your search.
-              Try a different keyword, category, or location.
+              {requestError
+                ? "The service API could not be reached. Check the API deployment settings and try again."
+                : "We couldn&apos;t find any approved services matching your search. Try a different keyword, category, or location."}
             </p>
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              className="mt-5 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50"
-            >
-              Clear all filters
-            </button>
+            {requestError ? (
+              <button
+                type="button"
+                onClick={() => setApplied((current) => ({ ...current }))}
+                className="mt-5 rounded-lg bg-[#7a1f2b] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#661824]"
+              >
+                Try again
+              </button>
+            ) : (
+              <button type="button" onClick={handleClearFilters} className="mt-5 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 transition-colors hover:bg-gray-50">
+                Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="mt-5 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">

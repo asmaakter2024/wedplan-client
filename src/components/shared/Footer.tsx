@@ -45,15 +45,13 @@ const YoutubeIcon = ({ className = "" }: { className?: string }) => (
 const quickLinks = [
   { label: "Home", href: "/" },
   { label: "Browse Services", href: "/services" },
-  { label: "Vendor Hub", href: "/vendors" },
   { label: "Sign In", href: "/signin" },
   { label: "Sign Up", href: "/signup" },
 ];
 
 const dashboardLinks = [
-  { label: "Customer Dashboard", href: "/dashboard" },
-  { label: "Vendor Dashboard", href: "/dashboard" },
-  { label: "Admin Dashboard", href: "/dashboard" },
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Profile Settings", href: "/dashboard/profile" },
 ];
 
 const categories = [
